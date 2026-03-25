@@ -6,7 +6,26 @@ from pathlib import Path
 from src.models.paper import Paper
 
 
-def render_daily_markdown(papers: list[Paper], report_date: datetime | None = None) -> str:
+def _render_venue_stats(venue_stats: list[dict[str, int | str]] | None) -> list[str]:
+    if not venue_stats:
+        return []
+    lines = [
+        "## Venue Statistics",
+        "",
+    ]
+    for item in venue_stats:
+        lines.append(
+            f"- {item['venue']}: fetched={item['fetched_count']}, filtered={item['filtered_count']}"
+        )
+    lines.append("")
+    return lines
+
+
+def render_daily_markdown(
+    papers: list[Paper],
+    report_date: datetime | None = None,
+    venue_stats: list[dict[str, int | str]] | None = None,
+) -> str:
     report_date = report_date or datetime.now()
     date_text = report_date.strftime("%Y-%m-%d")
     lines: list[str] = [
@@ -15,6 +34,7 @@ def render_daily_markdown(papers: list[Paper], report_date: datetime | None = No
         f"Total selected papers: **{len(papers)}**",
         "",
     ]
+    lines.extend(_render_venue_stats(venue_stats))
 
     for index, paper in enumerate(papers, start=1):
         lines.extend(
@@ -47,6 +67,7 @@ def render_daily_markdown(papers: list[Paper], report_date: datetime | None = No
 def render_release_summary_markdown(
     papers: list[Paper],
     report_date: datetime | None = None,
+    venue_stats: list[dict[str, int | str]] | None = None,
 ) -> str:
     report_date = report_date or datetime.now()
     date_text = report_date.strftime("%Y-%m-%d")
@@ -56,6 +77,7 @@ def render_release_summary_markdown(
         f"Total selected papers: **{len(papers)}**",
         "",
     ]
+    lines.extend(_render_venue_stats(venue_stats))
 
     for index, paper in enumerate(papers, start=1):
         lines.extend(
@@ -75,11 +97,15 @@ def write_daily_report(
     papers: list[Paper],
     output_dir: str,
     report_date: datetime | None = None,
+    venue_stats: list[dict[str, int | str]] | None = None,
 ) -> str:
     report_date = report_date or datetime.now()
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     output_file = Path(output_dir) / f"{report_date.strftime('%Y-%m-%d')}.md"
-    output_file.write_text(render_daily_markdown(papers, report_date), encoding="utf-8")
+    output_file.write_text(
+        render_daily_markdown(papers, report_date, venue_stats),
+        encoding="utf-8",
+    )
     return str(output_file)
 
 
@@ -87,12 +113,13 @@ def write_release_summary(
     papers: list[Paper],
     output_dir: str,
     report_date: datetime | None = None,
+    venue_stats: list[dict[str, int | str]] | None = None,
 ) -> str:
     report_date = report_date or datetime.now()
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     output_file = Path(output_dir) / f"weekly-summary-{report_date.strftime('%Y-%m-%d')}.md"
     output_file.write_text(
-        render_release_summary_markdown(papers, report_date),
+        render_release_summary_markdown(papers, report_date, venue_stats),
         encoding="utf-8",
     )
     return str(output_file)

@@ -16,6 +16,7 @@ from src.fetchers.openalex_fetcher import OpenAlexFetcher
 from src.processors.dedup import deduplicate_papers
 from src.processors.normalize import normalize_paper
 from src.processors.select import select_top_papers
+from src.processors.stats import build_venue_stats
 from src.processors.venue_filter import filter_and_annotate_by_venue
 from src.renderers.markdown_report import write_daily_report, write_release_summary
 from src.storage.sqlite_store import SQLitePaperStore
@@ -82,18 +83,21 @@ def run_pipeline(
         scoring_config=scoring_cfg,
         top_n=top_n,
     )
+    venue_stats = build_venue_stats(venue_filtered, strict_filtered)
 
     db_path = project_path / "data" / "tracker.db"
     store = SQLitePaperStore(str(db_path))
-    inserted_count = store.insert_papers(relaxed_filtered)
+    inserted_count = store.insert_papers(strict_filtered)
 
     report_path = write_daily_report(
         papers=top_papers,
         output_dir=str(project_path / "outputs" / "daily"),
+        venue_stats=venue_stats,
     )
     release_summary_path = write_release_summary(
         papers=top_papers,
         output_dir=str(project_path / "outputs" / "weekly"),
+        venue_stats=venue_stats,
     )
 
     result = {

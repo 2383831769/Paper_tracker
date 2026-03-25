@@ -25,11 +25,15 @@ def test_release_summary_contains_only_brief_fields() -> None:
         total_score=50.0,
     )
 
-    summary = render_release_summary_markdown([paper])
+    summary = render_release_summary_markdown(
+        [paper],
+        venue_stats=[{"venue": "Science Robotics", "fetched_count": 3, "filtered_count": 1}],
+    )
 
     assert "A Robotics Paper" in summary
     assert "Alice, Bob" in summary
     assert "2026-03-24T00:00:00+00:00" in summary
     assert "Science Robotics" in summary
+    assert "fetched=3, filtered=1" in summary
     assert "tier=" not in summary
     assert "Score Breakdown" not in summary

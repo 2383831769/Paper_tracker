@@ -23,7 +23,7 @@ def _paper(index: int, title: str, abstract: str) -> Paper:
     )
 
 
-def test_select_top_papers_backfills_when_strict_results_are_insufficient() -> None:
+def test_select_top_papers_does_not_backfill_when_strict_results_are_insufficient() -> None:
     strict_match = _paper(1, "Robot manipulation policy", "Imitation learning for manipulation.")
     relaxed_pool = [
         _paper(i, f"General robotics paper {i}", "Robotics systems and experiments.")
@@ -45,6 +45,6 @@ def test_select_top_papers_backfills_when_strict_results_are_insufficient() -> N
     )
 
     assert len(strict_filtered) == 1
-    assert len(relaxed_filtered) == 7
-    assert len(selected) == 5
+    assert len(relaxed_filtered) == 1
+    assert len(selected) == 1
     assert selected[0].paper_id == "paper-1"
