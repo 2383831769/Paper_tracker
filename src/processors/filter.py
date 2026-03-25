@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from src.models.paper import Paper
 from src.utils.text_utils import build_search_text, normalize_text
 
@@ -23,6 +25,13 @@ def should_exclude(text: str, exclude_keywords: list[str]) -> bool:
     return False
 
 
+def passes_venue_specific_rules(paper: Paper, search_text: str) -> bool:
+    venue_name = normalize_text(paper.venue_name or paper.venue_raw)
+    if venue_name == "nature communications":
+        return re.search(r"\brobot(ic)?\b", search_text) is not None
+    return True
+
+
 def filter_papers(
     papers: list[Paper],
     include_keywords: list[str],
@@ -33,6 +42,8 @@ def filter_papers(
     for paper in papers:
         search_text = build_search_text(paper.title, paper.abstract)
         if should_exclude(search_text, exclude_keywords):
+            continue
+        if not passes_venue_specific_rules(paper, search_text):
             continue
 
         hits = match_keywords(search_text, include_keywords)

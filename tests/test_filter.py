@@ -2,7 +2,12 @@ from src.models.paper import Paper
 from src.processors.filter import filter_papers
 
 
-def make_paper(title: str, abstract: str, paper_id: str = "1") -> Paper:
+def make_paper(
+    title: str,
+    abstract: str,
+    paper_id: str = "1",
+    venue_name: str = "",
+) -> Paper:
     return Paper(
         paper_id=paper_id,
         title=title,
@@ -15,6 +20,8 @@ def make_paper(title: str, abstract: str, paper_id: str = "1") -> Paper:
         categories=["cs.RO"],
         arxiv_url="https://arxiv.org/abs/1234.5678",
         pdf_url="https://arxiv.org/pdf/1234.5678.pdf",
+        venue_name=venue_name,
+        venue_raw=venue_name,
     )
 
 
@@ -49,3 +56,35 @@ def test_filter_can_keep_search_results_without_local_keyword_hit() -> None:
     )
     assert len(result) == 1
     assert result[0].keywords_matched == []
+
+
+def test_filter_excludes_nature_communications_without_robot_keyword() -> None:
+    papers = [
+        make_paper(
+            "Assembly planning with diffusion models",
+            "A manipulation planning method for complex assembly.",
+            venue_name="Nature Communications",
+        )
+    ]
+    result = filter_papers(
+        papers,
+        include_keywords=["assembly", "planning", "manipulation"],
+        exclude_keywords=[],
+    )
+    assert len(result) == 0
+
+
+def test_filter_keeps_nature_communications_with_robotic_keyword() -> None:
+    papers = [
+        make_paper(
+            "Robotic assembly planning with diffusion models",
+            "A manipulation planning method for robotic systems.",
+            venue_name="Nature Communications",
+        )
+    ]
+    result = filter_papers(
+        papers,
+        include_keywords=["assembly", "planning", "manipulation"],
+        exclude_keywords=[],
+    )
+    assert len(result) == 1
