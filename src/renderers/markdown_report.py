@@ -44,6 +44,33 @@ def render_daily_markdown(papers: list[Paper], report_date: datetime | None = No
     return "\n".join(lines)
 
 
+def render_release_summary_markdown(
+    papers: list[Paper],
+    report_date: datetime | None = None,
+) -> str:
+    report_date = report_date or datetime.now()
+    date_text = report_date.strftime("%Y-%m-%d")
+    lines: list[str] = [
+        f"# Paper Tracker Weekly Summary ({date_text})",
+        "",
+        f"Total selected papers: **{len(papers)}**",
+        "",
+    ]
+
+    for index, paper in enumerate(papers, start=1):
+        lines.extend(
+            [
+                f"## {index}. {paper.title}",
+                f"- Authors: {', '.join(paper.authors) if paper.authors else 'N/A'}",
+                f"- Published: {paper.published_date}",
+                f"- Venue: {paper.venue_name or paper.venue_raw or 'Unknown'}",
+                "",
+            ]
+        )
+
+    return "\n".join(lines)
+
+
 def write_daily_report(
     papers: list[Paper],
     output_dir: str,
@@ -53,4 +80,19 @@ def write_daily_report(
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     output_file = Path(output_dir) / f"{report_date.strftime('%Y-%m-%d')}.md"
     output_file.write_text(render_daily_markdown(papers, report_date), encoding="utf-8")
+    return str(output_file)
+
+
+def write_release_summary(
+    papers: list[Paper],
+    output_dir: str,
+    report_date: datetime | None = None,
+) -> str:
+    report_date = report_date or datetime.now()
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    output_file = Path(output_dir) / f"weekly-summary-{report_date.strftime('%Y-%m-%d')}.md"
+    output_file.write_text(
+        render_release_summary_markdown(papers, report_date),
+        encoding="utf-8",
+    )
     return str(output_file)

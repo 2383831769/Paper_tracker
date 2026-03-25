@@ -43,6 +43,7 @@ jobs:
         shell: bash
         run: |
           REPORT_PATH="$(ls -1 outputs/daily/*.md | sort | tail -n 1)"
+          SUMMARY_PATH="$(ls -1 outputs/weekly/weekly-summary-*.md | sort | tail -n 1)"
           REPORT_FILE="$(basename "$REPORT_PATH")"
           REPORT_DATE="${REPORT_FILE%.md}"
           ISO_WEEK="$(date -u +'%G-W%V')"
@@ -50,6 +51,7 @@ jobs:
           RELEASE_TITLE="Paper Tracker Weekly Report - ${ISO_WEEK}"
 
           echo "report_path=${REPORT_PATH}" >> "$GITHUB_OUTPUT"
+          echo "summary_path=${SUMMARY_PATH}" >> "$GITHUB_OUTPUT"
           echo "report_file=${REPORT_FILE}" >> "$GITHUB_OUTPUT"
           echo "report_date=${REPORT_DATE}" >> "$GITHUB_OUTPUT"
           echo "iso_week=${ISO_WEEK}" >> "$GITHUB_OUTPUT"
@@ -70,6 +72,7 @@ jobs:
           TAG="${{ steps.report.outputs.release_tag }}"
           TITLE="${{ steps.report.outputs.release_title }}"
           REPORT="${{ steps.report.outputs.report_path }}"
+          SUMMARY="${{ steps.report.outputs.summary_path }}"
           REPORT_DATE="${{ steps.report.outputs.report_date }}"
           BODY_FILE="$(mktemp)"
 
@@ -79,7 +82,7 @@ jobs:
             echo "- Report date: ${REPORT_DATE}"
             echo "- Attached file: $(basename "$REPORT")"
             echo
-            cat "$REPORT"
+            cat "$SUMMARY"
           } > "$BODY_FILE"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
