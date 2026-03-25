@@ -6,6 +6,10 @@ from pathlib import Path
 from src.models.paper import Paper
 
 
+def _format_display_date(date_text: str) -> str:
+    return (date_text or "").split("T")[0] or "N/A"
+
+
 def _render_venue_stats(venue_stats: list[dict[str, int | str]] | None) -> list[str]:
     if not venue_stats:
         return []
@@ -82,8 +86,10 @@ def render_release_summary_markdown(
             [
                 f"## {index}. {paper.title}",
                 f"- Authors: {', '.join(paper.authors) if paper.authors else 'N/A'}",
-                f"- Published: {paper.published_date}",
+                f"- Published: {_format_display_date(paper.published_date)}",
                 f"- Venue: {paper.venue_name or paper.venue_raw or 'Unknown'}",
+                "- Abstract:",
+                paper.abstract or "N/A",
                 "",
             ]
         )
