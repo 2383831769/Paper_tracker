@@ -48,7 +48,7 @@ jobs:
           REPORT_DATE="${REPORT_FILE%.md}"
           ISO_WEEK="$(date -u +'%G-W%V')"
           RELEASE_TAG="weekly-report-${ISO_WEEK}"
-          RELEASE_TITLE="Paper Tracker Weekly Report - ${ISO_WEEK}"
+          RELEASE_TITLE="Paper Tracker Weekly Report - ${REPORT_DATE}"
 
           echo "report_path=${REPORT_PATH}" >> "$GITHUB_OUTPUT"
           echo "summary_path=${SUMMARY_PATH}" >> "$GITHUB_OUTPUT"
