@@ -46,15 +46,13 @@ jobs:
           SUMMARY_PATH="$(ls -1 outputs/weekly/weekly-summary-*.md | sort | tail -n 1)"
           REPORT_FILE="$(basename "$REPORT_PATH")"
           REPORT_DATE="${REPORT_FILE%.md}"
-          ISO_WEEK="$(date -u +'%G-W%V')"
-          RELEASE_TAG="weekly-report-${ISO_WEEK}"
+          RELEASE_TAG="weekly-report-latest"
           RELEASE_TITLE="Paper Tracker Weekly Report - ${REPORT_DATE}"
 
           echo "report_path=${REPORT_PATH}" >> "$GITHUB_OUTPUT"
           echo "summary_path=${SUMMARY_PATH}" >> "$GITHUB_OUTPUT"
           echo "report_file=${REPORT_FILE}" >> "$GITHUB_OUTPUT"
           echo "report_date=${REPORT_DATE}" >> "$GITHUB_OUTPUT"
-          echo "iso_week=${ISO_WEEK}" >> "$GITHUB_OUTPUT"
           echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
           echo "release_title=${RELEASE_TITLE}" >> "$GITHUB_OUTPUT"
 
@@ -75,19 +73,22 @@ jobs:
           SUMMARY="${{ steps.report.outputs.summary_path }}"
           REPORT_DATE="${{ steps.report.outputs.report_date }}"
           BODY_FILE="$(mktemp)"
+          ASSET_DIR="$(mktemp -d)"
+          ASSET_FILE="${ASSET_DIR}/paper-tracker-weekly-report.md"
+          cp "$REPORT" "$ASSET_FILE"
 
           {
             echo "# ${TITLE}"
             echo
             echo "- Report date: ${REPORT_DATE}"
-            echo "- Attached file: $(basename "$REPORT")"
+            echo "- Attached file: paper-tracker-weekly-report.md"
             echo
             cat "$SUMMARY"
           } > "$BODY_FILE"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" --title "$TITLE" --notes-file "$BODY_FILE"
-            gh release upload "$TAG" "$REPORT" --clobber
+            gh release upload "$TAG" "$ASSET_FILE" --clobber
           else
-            gh release create "$TAG" "$REPORT" --title "$TITLE" --notes-file "$BODY_FILE"
+            gh release create "$TAG" "$ASSET_FILE" --title "$TITLE" --notes-file "$BODY_FILE"
           fi
