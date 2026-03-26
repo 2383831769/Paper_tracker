@@ -73,6 +73,10 @@ journals:
     aliases: ["T-CYB", "TCYB", "IEEE TCYB"]
     tier: "first"
     type: "journal"
+  - canonical_name: "Nature Communications"
+    aliases: ["Nat Commun"]
+    tier: "first"
+    type: "journal"
   - canonical_name: "Nature Machine Intelligence"
     aliases: ["Nat Mach Intell"]
     tier: "first"
@@ -124,7 +128,7 @@ journals:
   - canonical_name: "Autonomous Robots"
     aliases: ["AURO"]
     tier: "second"
-    type: "journal"
+    type: "journal" 
   - canonical_name: "Swarm Intelligence"
     aliases: []
     tier: "second"

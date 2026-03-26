@@ -1,20 +1,20 @@
-# Paper Tracker (MVP)
+# Paper Tracker 
 
+<<<<<<< HEAD
 面向“机器人 / 具身智能 / 机器人操作”方向的论文自动追踪系统。  
 使用更广覆盖学术元数据源（OpenAlex）实现最新前沿高质量论文自动抓取
+=======
+一个轻量可扩展的论文自动抓取与推送系统，主要关注机器人领域“ 具身智能 / 机器人操作 / 技能学习”等方向的相关论文，会自动抓取并筛选近一周内发表于重点期刊和会议的最新论文，具体期刊与会议清单请查看`resource.md` 文件。若在 GitHub 仓库中选择 `Watch > All Activity`，系统将在每周一自动运行，并将最新筛选结果通过 GitHub 的通知机制推送到你的 GitHub 关联邮箱。
+>>>>>>> ebe865f (docs_and_resources_update)
 
-## 1. 项目简介
-
-本项目实现了一个轻量可扩展的论文跟踪流水线：
+## 1. 运行流程
 
 1. 先在 OpenAlex 的 `sources` 中解析白名单会议/期刊来源。
 2. 用 OpenAlex 的 `works` 端点按 `时间窗 + source.id` 全量抓取目标来源中的论文。
 3. 对返回结果做去重、主题筛选、噪声排除和来源标准化校验。
-4. 使用规则评分（新近性、关键词相关性、来源分）。
+4. 使用规则进行评分（新近性、关键词相关性、来源分）。
 5. 存入 SQLite 并基于分数排序。
-6. 输出日报到 `outputs/daily/YYYY-MM-DD.md`。
-
-设计上保留了扩展边界，后续可接入 OpenReview / Semantic Scholar / 会议官网等。
+6. 输出报告到 `outputs/weekly/weekly-summary-YYYY-MM-DD.md`。
 
 ## 2. 安装方式
 
@@ -37,7 +37,17 @@ python -m src.main --days-back 365 --top-n 20
 - SQLite 数据库：`data/tracker.db`
 - 每日报告：`outputs/daily/YYYY-MM-DD.md`
 
-## 4. 目录说明
+## 4. 自定义配置
+
+如果你希望基于当前项目制作自己的论文追踪器，可以在本地部署后直接修改配置文件，而无需改动核心代码：
+
+- `config/keywords.yaml`：用于自定义检索关键词与排除关键词
+- `config/venues.yaml`：用于调整追踪的目标期刊与会议来源
+- `config/sources.yaml`：用于调整抓取参数、时间窗相关行为以及最终筛选数量等
+
+通过修改这些参数，可以快速构建适合自己研究方向的论文追踪器。
+
+## 5. 目录说明
 
 ```text
 Paper_tracker/
@@ -82,7 +92,7 @@ Paper_tracker/
     daily_digest.yml
 ```
 
-## 5. 评分规则（MVP）
+## 6. 评分规则（MVP）
 
 - `recency_score`：在配置窗口期内越新越高。
 - `keyword_score`：命中 include 关键词越多越高（有最大命中数上限）。
@@ -91,7 +101,7 @@ Paper_tracker/
 
 相关配置位于 `config/scoring.yaml`。
 
-## 6. 来源白名单策略（严格）
+## 7. 来源白名单策略（严格）
 
 系统当前只抓取并保留 `config/venues.yaml` 中定义的来源，包含你指定的第一、二梯队会议与期刊：
 
@@ -104,7 +114,7 @@ Paper_tracker/
   - 本地再根据 `config/keywords.yaml` 做主题相关性筛选
   - 相关配置位于 `config/sources.yaml`
 
-## 7. GitHub Actions 自动化
+## 8. GitHub Actions 自动化
 
 已提供工作流：`.github/workflows/daily_digest.yml`
 
@@ -112,16 +122,8 @@ Paper_tracker/
 - 支持定时触发（每天一次，UTC 时间）
 - 自动上传日报产物
 
-## 8. 运行测试
+## 9. 运行测试
 
 ```bash
 pytest
 ```
-
-## 9. 后续扩展建议
-
-1. 增加数据源插件接口：OpenReview / OpenAlex / Semantic Scholar。
-2. 增加更细粒度噪声过滤（如 “SLAM-only” 规则模板 + 分类器）。
-3. 增加多维评分：`venue_score`, `citation_score`, `code_score`, `reproducibility_score`。
-4. 增加周报聚合（趋势关键词、主题聚类、跨天去重）。
-5. 增加通知渠道（邮件、飞书、Slack、企业微信）。
