@@ -1,6 +1,134 @@
 # Paper Tracker 
 
-一个轻量可扩展的论文自动抓取与推送系统，主要关注机器人领域“ 具身智能 / 机器人操作 / 技能学习”等方向的相关论文，会自动抓取并筛选近一周内发表于重点期刊和会议的最新论文，具体期刊与会议清单请查看`resource.md` 文件。若在 GitHub 仓库中选择 `Watch > All Activity`，系统将在每周一自动运行，并将最新筛选结果通过 GitHub 的通知机制推送到你的 GitHub 关联邮箱。
+A lightweight and extensible paper tracking and notification system focused on robotics research, especially **embodied intelligence / robot manipulation / skill learning**. The system automatically collects and filters the latest papers published in major journals and conferences over the past week. For the full list of tracked journals and conferences, please refer to `resource.md`. If you choose `Watch > All Activity` on the GitHub repository, the workflow will run automatically every Monday and deliver the latest filtered results to your GitHub-associated email through GitHub notifications.
+
+## 1. Workflow
+
+1. Resolve whitelisted conference and journal sources from OpenAlex `sources`.
+2. Fetch all papers from target sources within the configured time window through the OpenAlex `works` endpoint using `source.id + publication date`.
+3. Deduplicate the results, apply topic filtering, remove noisy topics, and normalize source names.
+4. Score papers using rule-based signals such as recency, keyword relevance, and source quality.
+5. Store results in SQLite and rank papers by score.
+6. Output the report to `outputs/weekly/weekly-summary-YYYY-MM-DD.md`.
+
+## 2. Installation
+
+Recommended Python version: `3.11+`
+
+```bash
+pip install -r requirements.txt
+```
+
+## 3. Local Usage
+
+Run the following command in the project root `Paper_tracker`:
+
+```bash
+python -m src.main --days-back 365 --top-n 20
+```
+
+After execution, the project will generate:
+
+- SQLite database: `data/tracker.db`
+- Detailed report: `outputs/daily/YYYY-MM-DD.md`
+- Weekly summary for release publishing: `outputs/weekly/weekly-summary-YYYY-MM-DD.md`
+
+## 4. Customization
+
+If you want to build your own paper tracker based on this project, you can deploy it locally and customize the configuration files directly without modifying the core code:
+
+- `config/keywords.yaml`: define inclusion and exclusion keywords
+- `config/venues.yaml`: adjust the target journals and conferences to track
+- `config/sources.yaml`: tune fetching behavior, time-window-related settings, and final selection size
+
+By changing these parameters, you can quickly build a tracker tailored to your own research interests.
+
+## 5. Project Structure
+
+```text
+Paper_tracker/
+  README.md
+  requirements.txt
+  .gitignore
+  config/
+    keywords.yaml      # include / exclude keyword configuration
+    sources.yaml       # data source configuration (OpenAlex endpoint / page size / timeout)
+    venues.yaml        # conference and journal whitelist (canonical/aliases/tier/type)
+    scoring.yaml       # scoring configuration
+  data/
+    raw/
+    normalized/
+    tracker.db         # generated after running the pipeline
+  outputs/
+    daily/
+    weekly/
+  src/
+    main.py
+    fetchers/
+      arxiv_fetcher.py
+    processors/
+      normalize.py
+      filter.py
+      score.py
+      dedup.py
+    storage/
+      sqlite_store.py
+    renderers/
+      markdown_report.py
+    models/
+      paper.py
+    utils/
+      logging_utils.py
+      text_utils.py
+  tests/
+    test_filter.py
+    test_score.py
+    test_dedup.py
+  .github/workflows/
+    daily_digest.yml
+```
+
+## 6. Scoring Rules (MVP)
+
+- `recency_score`: newer papers receive higher scores within the configured time window
+- `keyword_score`: papers matching more include keywords receive higher scores, up to a configured cap
+- `source_score`: currently based on OpenAlex source weighting, extensible to venue-level weighting
+- `total_score`: weighted combination of all current scoring dimensions, with room for future factors such as venue, citation, and code availability
+
+Relevant configuration is stored in `config/scoring.yaml`.
+
+## 7. Source Whitelist Policy (Strict)
+
+The system only fetches and keeps papers from the sources defined in `config/venues.yaml`, including the first-tier and second-tier conferences and journals you specified.
+
+- Source names are normalized to ignore case, spaces, and punctuation differences
+- Alias matching is supported (for example `CVPR`, `ICCV`, `ECCV`, `RSS`, `ICRA`, `IROS`, `T-RO`, `IJRR`, `RA-L`, etc.)
+- Any paper that cannot be clearly matched to a whitelisted `canonical_name` is discarded
+- OpenAlex currently runs in a “fetch all papers from whitelisted sources within a time window” mode:
+  - First resolve `source.id` values from the OpenAlex `sources` endpoint
+  - Then fetch all papers within the configured time window through the OpenAlex `works` endpoint using `from_publication_date + primary_location.source.id`
+  - Finally apply topic relevance filtering locally based on `config/keywords.yaml`
+  - Related source configuration is stored in `config/sources.yaml`
+
+## 8. GitHub Actions Automation
+
+The repository includes a workflow file at `.github/workflows/daily_digest.yml`.
+
+- Supports manual triggering (`workflow_dispatch`)
+- Supports scheduled weekly execution
+- Automatically uploads generated report artifacts
+
+## 9. Run Tests
+
+```bash
+pytest
+```
+
+---
+
+## 中文说明
+
+一个轻量可扩展的论文自动抓取与推送系统，主要关注机器人领域“具身智能 / 机器人操作 / 技能学习”等方向的相关论文，会自动抓取并筛选近一周内发表于重点期刊和会议的最新论文，具体期刊与会议清单请查看 `resource.md` 文件。若在 GitHub 仓库中选择 `Watch > All Activity`，系统将在每周一自动运行，并将最新筛选结果通过 GitHub 的通知机制推送到你的 GitHub 关联邮箱。
 
 ## 1. 运行流程
 
@@ -30,7 +158,8 @@ python -m src.main --days-back 365 --top-n 20
 运行后会产生：
 
 - SQLite 数据库：`data/tracker.db`
-- 每日报告：`outputs/daily/YYYY-MM-DD.md`
+- 详细报告：`outputs/daily/YYYY-MM-DD.md`
+- 用于发布的周报摘要：`outputs/weekly/weekly-summary-YYYY-MM-DD.md`
 
 ## 4. 自定义配置
 
@@ -114,7 +243,7 @@ Paper_tracker/
 已提供工作流：`.github/workflows/daily_digest.yml`
 
 - 支持手动触发（`workflow_dispatch`）
-- 支持定时触发（每天一次，UTC 时间）
+- 支持每周定时触发（UTC 时间）
 - 自动上传日报产物
 
 ## 9. 运行测试
