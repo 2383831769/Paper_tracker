@@ -92,3 +92,18 @@ jobs:
           else
             gh release create "$TAG" "$ASSET_FILE" --title "$TITLE" --notes-file "$BODY_FILE"
           fi
+      - name: Send email notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "📬 Paper Tracker 周报 - ${{ steps.report.outputs.report_date }} (Top-${{ github.event.inputs.top_n || '20' }})"
+          body: file://${{ steps.report.outputs.summary_path }}
+          to: ${{ secrets.MAIL_TO }}
+          from: Paper Tracker <${{ secrets.MAIL_USERNAME }}>
+          attachments: ${{ steps.report.outputs.report_path }}
+          convert_markdown: true          # 把 Markdown 自动转成漂亮的 HTML 邮件
+          secure: true
+          ignore_cert: false
