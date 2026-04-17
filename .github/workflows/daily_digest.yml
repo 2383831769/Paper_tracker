@@ -92,18 +92,18 @@ jobs:
           else
             gh release create "$TAG" "$ASSET_FILE" --title "$TITLE" --notes-file "$BODY_FILE"
           fi
-      - name: Send email notification
+      - name: Send email to campus mailbox
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.MAIL_SERVER }}
-          server_port: 465
+          server_port: ${{ secrets.MAIL_PORT || '465' }}   # 如果你没设 MAIL_PORT，这里默认 465
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "📬 Paper Tracker 周报 - ${{ steps.report.outputs.report_date }} (Top-${{ github.event.inputs.top_n || '20' }})"
+          subject: "📬 Paper Tracker 周报 - ${{ steps.report.outputs.report_date }} (Top ${{ github.event.inputs.top_n || '20' }})"
           body: file://${{ steps.report.outputs.summary_path }}
           to: ${{ secrets.MAIL_TO }}
           from: Paper Tracker <${{ secrets.MAIL_USERNAME }}>
           attachments: ${{ steps.report.outputs.report_path }}
-          convert_markdown: true          # 把 Markdown 自动转成漂亮的 HTML 邮件
-          secure: true
-          ignore_cert: false
+          convert_markdown: true
+          secure: true                  # 端口 465 时设 true；如果用 587 可尝试 false
+          ignore_cert: false            # 大多数学校不需要设 true
